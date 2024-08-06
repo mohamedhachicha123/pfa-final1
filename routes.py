@@ -44,11 +44,8 @@ def webscraper():
         site_name=["indeed", "linkedin", "zip_recruiter", "glassdoor"],
         search_term="IT",
         job_type="internship",
-        location="france",
-        results_wanted=10000,
-        hours_old=168,
-        country_indeed='france',
-        linkedin_fetch_description=True
+        results_wanted=1000,
+        hours_old=672
     )
 
     jobs['is_remote'].fillna(0, inplace=True)
@@ -56,7 +53,7 @@ def webscraper():
 
     selected_columns = ['id', 'location', 'title', 'job_url', 'is_remote', 'description']
     selected_jobs = jobs[selected_columns]
-    selected_jobs = selected_jobs.dropna(subset=['description'])
+    selected_jobs = selected_jobs.dropna(subset=['description','job_url'])
 
     file_path = "csv_Files/jobs.csv"
 
@@ -119,6 +116,55 @@ def parse_search():
 
     documents = parser.load_data(glob.glob("uploads/*.pdf"))
     document = documents[0].text
+    
+    
+    messages = """
+    You are an cv filter system.use these informations in the cv : ' """ + document + """ '. Note that the output should be in JSON format:
+    {{
+                    "Informations": [
+                        {{
+                            "job_to_search_for": str,
+                            "Work Experience": str (example : 2years),
+                            "Key_Responsibilities_and_Achievements": [str,str,str,....],
+                            "Skills" : [str,str,str,str....],
+                            "Certifications" : [str,str,str,....],
+                            "Projects": [str,str,str,....],
+                            "recap": str                            
+                        }}                        
+    }}
+    """
+    
+     
+    response = model_internquest.generate_content(
+        messages,
+        generation_config=genai.GenerationConfig(
+            temperature=0
+        )
+    )
+    print("\n" + "*"*60 + " Internships : " + response.text + "*"*60 + "\n")
+    json_response = json.loads(response.text)
+    info = json_response["Informations"][0]
+    job_to_search_for = info["job_to_search_for"]
+    work_experience = info["Work Experience"]
+    responsibilities = ", ".join(info["Key_Responsibilities_and_Achievements"])
+    skills = ", ".join(info["Skills"])
+    certifications = ", ".join(info["Certifications"])
+    projects = ", ".join(info["Projects"])
+    recap = info["recap"]
+
+    # Construct paragraph
+    paragraph = (
+        f"{recap} With {work_experience} of work experience im searshing for an internship in {job_to_search_for}, I have "
+        f"been responsible for {responsibilities}. My skills include {skills}."
+        f"I have earned certifications such as {certifications}, and I have worked on projects like "
+        f"{projects}."
+    )
+
+    print(paragraph)
+    
+    
+    
+    
     pc = Pinecone(
         api_key=os.environ.get("PINECONE_API_KEY")
     )
@@ -128,7 +174,7 @@ def parse_search():
     # embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
     embeddings = TogetherEmbeddings(api_key="58e1a1245943245308572fa45b8eee41985db958b8d1e085a78758865d326783", model="togethercomputer/m2-bert-80M-8k-retrieval")
         
-    vector = embeddings.embed_query(document)
+    vector = embeddings.embed_query(paragraph)
     
     results = index.query(
         namespace="ns1",
@@ -193,7 +239,7 @@ def internships(parse_search_result):
         
         output = json_response.get("jobs", [])
         for job in output:
-            print(f"*"*70 + "\n" + job["jobTitle"]+" :  " + job["location"] + "\n" + "*"*70 )
+            print(f"*"*70 + "\n" + job["jobTitle"]+" :  " + job["location"] +" :  " + job["link"] + "\n" + "*"*70 )
         
         return output            
     except Exception as e:
@@ -233,6 +279,6 @@ def get_internships():
 
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=webscraper, trigger="cron", hour=8, minute=48)
+    scheduler.add_job(func=webscraper, trigger="cron", hour=9, minute=54)
     scheduler.start()
     app.run(debug=True)
