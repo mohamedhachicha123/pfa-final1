@@ -5,7 +5,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import pandas as pd
 import os
 from dotenv import load_dotenv
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
+from langchain_together.embeddings import TogetherEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pinecone import Pinecone
 from llama_parse import LlamaParse
@@ -32,7 +33,7 @@ UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = Flask(__name__)
-
+app.secret_key = 'akjezrghualezhrulaehr'
 @app.route('/')
 @app.route('/index.html')
 def index():
@@ -40,12 +41,12 @@ def index():
 
 def webscraper():
     jobs = scrape_jobs(
-        site_name=["linkedin"],
+        site_name=["indeed", "linkedin", "zip_recruiter", "glassdoor"],
         search_term="IT",
         job_type="internship",
         location="france",
-        results_wanted=1000,
-        hours_old=24,
+        results_wanted=10000,
+        hours_old=168,
         country_indeed='france',
         linkedin_fetch_description=True
     )
@@ -87,24 +88,25 @@ def embed_and_store(new_jobs):
     ).tolist()
 
     # Splitting long rows into smaller chunks if necessary
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=70)
     texts = [chunk for text in combined_texts for chunk in text_splitter.split_text(text)]
     
     # Initialize embeddings
-    embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
-    
+    # embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+    embeddings = TogetherEmbeddings(api_key="58e1a1245943245308572fa45b8eee41985db958b8d1e085a78758865d326783", model="togethercomputer/m2-bert-80M-8k-retrieval")
     # Initialize Pinecone
     pc = Pinecone(
         api_key=os.environ.get("PINECONE_API_KEY")
     )
-    index_name = "internquest"
+    index_name = "interquest1"
     index = pc.Index(index_name)
     
     # Embed texts and upsert to Pinecone
     vectors = embeddings.embed_documents(texts)
     ids = [f"{i}" for i in range(len(vectors))]
 
-    index.upsert(vectors=zip(ids, vectors))
+    index.upsert(vectors=zip(ids, vectors),
+    namespace= "ns1")
 
     print("Embedded and stored the new job rows in the vector database.")
     return None
@@ -116,30 +118,28 @@ def parse_search():
     )
 
     documents = parser.load_data(glob.glob("uploads/*.pdf"))
-    
+    document = documents[0].text
     pc = Pinecone(
         api_key=os.environ.get("PINECONE_API_KEY")
     )
-    index_name = "internquest"
+    index_name = "interquest1"
     index = pc.Index(index_name)
     
-    response = client.embeddings.create(
-    input="Your text string goes here",
-    model="text-embedding-3-small"
-    )
-    
-    
-    x = response.data[0].embedding
+    # embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+    embeddings = TogetherEmbeddings(api_key="58e1a1245943245308572fa45b8eee41985db958b8d1e085a78758865d326783", model="togethercomputer/m2-bert-80M-8k-retrieval")
+        
+    vector = embeddings.embed_query(document)
     
     results = index.query(
         namespace="ns1",
-        vector=x,
-        top_k=5,
+        vector=vector,
+        top_k=150,
         include_values=False,
         include_metadata=True
     )
 
-    print(results)
+    print("parse_search : " + str(results))
+    return str(results)
     
     
 def internships(parse_search_result):
@@ -194,8 +194,8 @@ def internships(parse_search_result):
         output = json_response.get("jobs", [])
         for job in output:
             print(f"*"*70 + "\n" + job["jobTitle"]+" :  " + job["location"] + "\n" + "*"*70 )
-        session['Jobs'] = output
-        return render_template('index.html')            
+        
+        return output            
     except Exception as e:
         print(f"Error generating content: {e}")
         return None
@@ -225,13 +225,14 @@ def get_internships():
     
     if pdf_files:        
         parse_result = parse_search()
-        return internships(parse_result)
+        output = internships(parse_result)
+        session['Jobs'] = output
+        return(render_template("index.html", jobs=output))
     else:
         return jsonify({'message': 'No PDF files found'}), 400
 
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=webscraper, trigger="cron", hour=3, minute=36)
+    scheduler.add_job(func=webscraper, trigger="cron", hour=8, minute=48)
     scheduler.start()
-
     app.run(debug=True)
