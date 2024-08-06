@@ -1,0 +1,360 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE-edge">
+<meta name="viewport" content="width=device-width, intial-scale=1.0">
+<title>Intern Quest Esprit</title>
+<link rel="stylesheet" href="../static/css/style.css"/>
+<link rel="stylesheet" href="../static/css/home.css"/>
+<link rel="stylesheet" href="../static/css/drag_drop.css"/>
+<link rel="stylesheet" href="../static/css/output_container.css"/>
+<link rel="stylesheet" href="../static/css//home.css"/>
+<link rel="shortcut icon" href="../static/images/favicon.png"/>
+<style>
+    /* Full-width input fields */
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+button {
+  background-color: #04AA6D;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+/* Extra styles for the cancel button */
+.cancelbtn {
+  width: auto;
+  padding: 10px 18px;
+  background-color: #f44336;
+}
+
+/* Center the image and position the close button */
+.imgcontainer {
+  text-align: center;
+  margin: 24px 0 12px 0;
+  position: relative;
+}
+
+img.avatar {
+  width: 40%;
+  border-radius: 50%;
+}
+
+.container {
+  padding: 16px;
+}
+
+span.psw {
+  float: right;
+  padding-top: 16px;
+}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  padding-top: 60px;
+}
+
+/* Modal Content/Box */
+.modal-content {
+    width: 400px;
+  background-color: #fefefe;
+  margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button (x) */
+.close {
+  position: absolute;
+  right: 25px;
+  top: 0;
+  color: #000;
+  font-size: 35px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: red;
+  cursor: pointer;
+}
+
+/* Add Zoom Animation */
+.animate {
+  -webkit-animation: animatezoom 0.6s;
+  animation: animatezoom 0.6s
+}
+.logo img {
+  width: 100%;
+}
+
+
+@-webkit-keyframes animatezoom {
+  from {-webkit-transform: scale(0)} 
+  to {-webkit-transform: scale(1)}
+}
+  
+@keyframes animatezoom {
+  from {transform: scale(0)} 
+  to {transform: scale(1)}
+}
+
+/* Change styles for span and cancel button on extra small screens */
+@media screen and (max-width: 300px) {
+  span.psw {
+     display: block;
+     float: none;
+  }
+  .cancelbtn {
+     width: 100%;
+  }
+}
+
+</style>
+</head>
+
+<body>
+    
+    <section class="main" style="background-image: url(../static/images/hero-bg.png);">
+        
+        <nav>
+            <a href="#" class="logo">
+                <img src="../static/images/Esprit_logo.png" width="320px" />
+            </a>
+            <input class="menu-btn" type="checkbox" id="menu-btn"/>
+            <label class="menu-icon" for="menu-btn">
+                <span class="nav-icon"></span>
+            </label>
+            <ul class="menu" style="border-radius: 5px;">
+                <li><a href="#">About</a></li>
+                <li><a href="#">Notification</a></li>
+                <li><a href="#">Results</a></li>
+                <li><a href="#">Apply Now</a></li>
+                <li><a class="active" onclick="document.getElementById('id01').style.display='block'" style="width:auto; border-radius: 5px; cursor: pointer;">Login</a></li>
+            </ul>
+        </nav>
+       
+        <!-- login modal start -->
+        <div id="id01" class="modal">
+  
+            <form class="modal-content animate" action="/action_page.php" method="post" style="
+            width: 400px;
+        ">
+              <div class="imgcontainer">
+                <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+                <p style="font-size: 22px;">Student Login </p>
+                <hr>
+              </div>
+          
+              <div class="container">
+                <label for="uname"><b>Identifiant</b></label>
+                <input type="text" placeholder="Enter Username" name="uname" required>
+          
+                <label for="psw"><b>Password</b></label>
+                <input type="password" placeholder="Enter Password" name="psw" required>
+                  
+                <button type="submit">Login</button>
+                <label>
+                  <input type="checkbox" checked="checked" name="remember"> Remember me
+                </label>
+              </div>
+          
+              <div class="container" style="background-color:#f1f1f1">
+                <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+                <span class="psw"><a href="#">Register Here</a></span>
+                <span class="psw" style="margin-right: 11px;"><a href="#">Forgot  password?</a></span>
+              </div>
+            </form>
+          </div>
+        <!-- login modal end  -->
+
+
+        <!--main-content-->
+        <div class="home-content">
+            
+            <!--text-->
+            <div class="home-text" >
+                
+                <!-- <h3 style="color: white; letter-spacing: 3px;">Welcome to Esprit</h3>
+                <h1 style="color: white;"> Student Portal</h1>
+                <p style="color: white;">The purpose of Schools is to prepare students with promise
+                    to enhance their intellectual, physical, social, emotional, spiritual,
+                    and artistic growth so that they may realize their power for good
+                    as citizens</p>
+            login-btn
+            <a href="#" class="main-login" style="border-radius: 5px;">Apply Now</a>
+            </div>
+            <!--img-->
+            <!-- <div class="home-img" style="width: 500px;">
+                <img src="../static/images/hero.png" width="500px" style="text-shadow: 20px 22px;"/>
+                <marquee width="100%" direction="left" onmouseover="this.stop();"
+                onmouseout="this.start();">
+                    <a href="#" style="color: white;">Addmission open of 13th August 2021, Stream BCA, BBA, Bio-Tech and Computer Science.</a>
+                    </marquee>
+                    <marquee width="100%" direction="right" onmouseover="this.stop();"
+                onmouseout="this.start();">
+                    <a href="#" style="color: white;">Addmission open of 13th August 2021, Stream BCA, BBA, Bio-Tech and Computer Science.</a>
+                    </marquee>
+            </div> -->
+            
+            <form class="file-upload-form" action="/save_pdf" method="POST" enctype="multipart/form-data">
+              <table>
+                <td>
+                  <tr>
+                    <label for="file" class="file-upload-label">
+                      <div class="file-upload-design">
+                        <svg viewBox="0 0 640 512" height="1em">
+                          <path
+                            d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"
+                          ></path>
+                        </svg>
+                        <p>Drag and Drop</p>
+                        <p>or</p>
+                        <span class="browse-button">Browse file</span>
+                        <input id="file" type="file" name="file"/>
+                      </div>
+                    </label>
+                  </tr>
+                  <tr>
+                </tr>
+                </td>
+                <td>
+                  <button type="submit">Upload</button>
+                </td>
+              </table>
+            </form>
+            <div class="output_container">
+              <form method="post" action="/get_internships" id="Internship-form" class="login-form" autocomplete="off" role="main">
+                <div>
+                  <label>
+                    <input type="text" class="text" name="Country" placeholder="Country" required />
+                    <span class="required">Country</span>
+                  </label>
+                </div>
+                <div>
+                    <label>
+                      <input type="text" class="text" name="Job_Title" placeholder="Job Title" required />
+                      <span class="required">Job Title</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label>
+                      <input type="number" class="text" name="Number_Of_Jobs" placeholder="Number Of Jobs" required />
+                      <span class="required">Number Of Jobs</span>
+                    </label>
+                  </div>      
+                <input type="submit" value="Find My Internship" />    
+              </form>
+            </div>
+            <div class="output_container" style="margin-top:18%; margin-left:10%;border-radius:5%">
+              {% if not jobs %}
+                <img style="width:360px;border-radius:5%" src="../static/images/Blanc.gif" alt="No jobs found">
+              {% endif %}
+              <ul>
+                {% if jobs %}
+                {% for job in jobs %}
+                    <li>{{ job['jobTitle'] }} - {{ job['location'] }}</li>
+                {% endfor %}
+                {% endif %}
+            </ul>
+            </div>
+
+
+            
+        </div>
+        
+        <!--arrow-->
+        <!-- <div class="arrow"></div>
+        <span class="scroll">Scroll</span> -->
+    </section>
+    
+    <!--services----------------------->
+    <section class="services">
+        <!--heading----------->
+        <div class="services-heading">
+            <h2>OUR PROFESSIONAL COURSES</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur ad asese do eiusmod tempor incididunt utarla oreetdolo magna aliqua</p>
+        </div>
+        <!--box-container----------------->
+        <div class="box-container">
+            <!--box-1-------->
+            <div class="box">
+                <img src="../static/images/icon5.png">
+                <font>Batchlor of Computer Application</font>
+                <p>Lorem ipsum dolor sit amet, consectetur ad asese do eiusmod tempor incididunt utarla oreetdolo magna aliqua</p>
+                <!--btn--------->
+                <a href="#">Apply Now</a>
+            </div>
+            <!--box-2-------->
+            <div class="box">
+                <img src="../static/images/icon5.png">
+                <font>Batchlor of Business Administration</font>
+                <p>Lorem ipsum dolor sit amet, consectetur ad asese do eiusmod tempor incididunt utarla oreetdolo magna aliqua.</p>
+                <!--btn--------->
+                <a href="#">Apply Now</a>
+            </div>
+            <!--box-3-------->
+            <div class="box">
+                <img src="../static/images/icon5.png">
+                <font>Bio-Technology</font>
+                <p>Lorem ipsum dolor sit amet, consectetur ad asese do eiusmod tempor incididunt utarla oreetdolo magna aliqua</p>
+                <!--btn--------->
+                <a href="#">Apply Now</a>
+            </div>
+            <!--box-4-------->
+            <div class="box">
+                <img src="../static/images/icon5.png">
+                <font>Computer Science</font>
+                <p>Lorem ipsum dolor sit amet, consectetur ad asese do eiusmod tempor incididunt utarla oreetdolo magna aliqua.</p>
+                <!--btn--------->
+                <a href="#">Apply Now</a>
+            </div>
+            <!--box-1-------->
+            
+        </div>
+    </section>
+    
+    <!--footer------------->
+    <footer>
+        <p>Copyright (C) - 2024 | Developed By <span style="color: red;">Mohamed Hachicha & Mohamed Aziz Omezzine</span></p>
+    </footer>
+    <script>
+        // Get the modal
+        var modal = document.getElementById('id01');
+        
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        </script>
+</body>
+
+</html>
