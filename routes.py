@@ -79,71 +79,86 @@ def webscraper():
     return None
 
 def embed_and_store(new_jobs):
-    # Combine all relevant columns into a single string for each row
+    # Replace NaN with an empty string or some default value
+    new_jobs.fillna('', inplace=True)
+
     combined_texts = new_jobs.apply(
         lambda row: ' '.join([str(row[col]) for col in new_jobs.columns]), axis=1
     ).tolist()
+    print(combined_texts[:5])  # Debugging print statement
 
-    # Splitting long rows into smaller chunks if necessary
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=70)
     texts = [chunk for text in combined_texts for chunk in text_splitter.split_text(text)]
-    
-    # Initialize embeddings
-    # embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
-    embeddings = TogetherEmbeddings(api_key="58e1a1245943245308572fa45b8eee41985db958b8d1e085a78758865d326783", model="togethercomputer/m2-bert-80M-8k-retrieval")
+    print(texts[:5])  # Debugging print statement
+
+    embeddings = TogetherEmbeddings(api_key="11ceeb85849e5e4bca6b2585107fbbeceff5af2d93792b5f10d93984379002e1", model="togethercomputer/m2-bert-80M-8k-retrieval")
+    try:
+        vectors = embeddings.embed_documents(texts)
+    except Exception as e:
+        print(f"Error embedding documents: {e}")
+        return  # Exit the function if there's an error
+
+    print(vectors[:5])  # Debugging print statement
+
     # Initialize Pinecone
-    pc = Pinecone(
-        api_key=os.environ.get("PINECONE_API_KEY")
-    )
+    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index_name = "interquest1"
     index = pc.Index(index_name)
-    
-    # Embed texts and upsert to Pinecone
-    vectors = embeddings.embed_documents(texts)
-    ids = [f"{i}" for i in range(len(vectors))]
 
-    index.upsert(vectors=zip(ids, vectors),
-    namespace= "ns1")
+    # Prepare the IDs and metadata
+    ids = new_jobs['id'].astype(str).tolist()
+    job_metadata = new_jobs.to_dict(orient='records')
+    print(job_metadata[:5])  # Debugging print statement
 
-    print("Embedded and stored the new job rows in the vector database.")
-    return None
+    # Prepare the vectors with IDs and metadata
+    vectors_with_metadata = [
+        {"id": id_, "values": vector, "metadata": metadata} 
+        for id_, vector, metadata in zip(ids, vectors, job_metadata)
+    ]
+
+    # Validate the vectors_with_metadata structure
+    for item in vectors_with_metadata[:5]:
+        print(item)  # Debugging print statement
+
+    try:
+        # Upsert the vectors into Pinecone
+        index.upsert(vectors=vectors_with_metadata, namespace="ns1")
+        print("Embedded and stored the new job rows in the vector database.")
+    except Exception as e:
+        print(f"Error during upsert: {e}")
+
+
 
 def parse_search():
-    # Set up parser
-    parser = LlamaParse(
-        result_type="markdown"  # "markdown" and "text" are available
-    )
-
+    parser = LlamaParse(result_type="markdown")
     documents = parser.load_data(glob.glob("uploads/*.pdf"))
     document = documents[0].text
-    
-    
-    messages = """
-    You are an cv filter system.use these informations in the cv : ' """ + document + """ '. Note that the output should be in JSON format:
+
+    messages = f"""
+    You are a CV filter system. Use these informations in the CV: '{document}'. Note that the output should be in JSON format:
     {{
-                    "Informations": [
-                        {{
-                            "job_to_search_for": str,
-                            "Work Experience": str (example : 2years),
-                            "Key_Responsibilities_and_Achievements": [str,str,str,....],
-                            "Skills" : [str,str,str,str....],
-                            "Certifications" : [str,str,str,....],
-                            "Projects": [str,str,str,....],
-                            "recap": str                            
-                        }}                        
+        "Informations": [
+            {{
+                "job_to_search_for": str,
+                "Work Experience": str (example: 2 years),
+                "Key_Responsibilities_and_Achievements": [str, str, str, ...],
+                "Skills": [str, str, str, str, ...],
+                "Certifications": [str, str, str, ...],
+                "Projects": [str, str, str, ...],
+                "recap": str
+            }}
+        ]
     }}
     """
     
-     
     response = model_internquest.generate_content(
         messages,
-        generation_config=genai.GenerationConfig(
-            temperature=0
-        )
+        generation_config=genai.GenerationConfig(temperature=0)
     )
     print("\n" + "*"*60 + " Internships : " + response.text + "*"*60 + "\n")
     json_response = json.loads(response.text)
     info = json_response["Informations"][0]
+
     job_to_search_for = info["job_to_search_for"]
     work_experience = info["Work Experience"]
     responsibilities = ", ".join(info["Key_Responsibilities_and_Achievements"])
@@ -152,40 +167,32 @@ def parse_search():
     projects = ", ".join(info["Projects"])
     recap = info["recap"]
 
-    # Construct paragraph
     paragraph = (
         f"{recap} With {work_experience} of work experience im searshing for an internship in {job_to_search_for}, I have "
-        f"been responsible for {responsibilities}. My skills include {skills}."
-        f"I have earned certifications such as {certifications}, and I have worked on projects like "
-        f"{projects}."
+        f"been responsible for {responsibilities}. My skills include {skills}. "
+        f"I have earned certifications such as {certifications}, and I have worked on projects like {projects}."
     )
-
     print(paragraph)
-    
-    
-    
-    
-    pc = Pinecone(
-        api_key=os.environ.get("PINECONE_API_KEY")
-    )
+
+    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index_name = "interquest1"
     index = pc.Index(index_name)
-    
-    # embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
-    embeddings = TogetherEmbeddings(api_key="58e1a1245943245308572fa45b8eee41985db958b8d1e085a78758865d326783", model="togethercomputer/m2-bert-80M-8k-retrieval")
-        
-    vector = embeddings.embed_query(paragraph)
-    
-    results = index.query(
-        namespace="ns1",
-        vector=vector,
-        top_k=150,
-        include_values=False,
-        include_metadata=True
-    )
 
-    print("parse_search : " + str(results))
-    return str(results)
+    embeddings = TogetherEmbeddings(api_key="11ceeb85849e5e4bca6b2585107fbbeceff5af2d93792b5f10d93984379002e1", model="togethercomputer/m2-bert-80M-8k-retrieval")
+    vector = embeddings.embed_query(paragraph)
+    print(vector)  # Debugging print statement
+
+    results = index.query(
+    namespace="ns1",
+    vector=vector,
+    top_k=5,
+    include_values=False,
+    include_metadata=True
+    )
+    descriptions = [match['metadata']['description'] for match in results['matches']]
+    combined_description = ' '.join(descriptions)
+    combined_description = combined_description.replace('\n', ' ').replace('  ', ' ').strip()
+    return combined_description
     
     
 def internships(parse_search_result):
@@ -237,10 +244,8 @@ def internships(parse_search_result):
         print("\n" + "*"*60 + " Internships : " + response.text + "*"*60 + "\n")
         json_response = json.loads(response.text)
         
-        output = json_response.get("jobs", [])
-        for job in output:
-            print(f"*"*70 + "\n" + job["jobTitle"]+" :  " + job["location"] +" :  " + job["link"] + "\n" + "*"*70 )
-        
+        output = json_response.get("jobs", [])     
+        print(output)   
         return output            
     except Exception as e:
         print(f"Error generating content: {e}")
@@ -266,16 +271,11 @@ def save_pdf():
 
 
 @app.route('/get_internships', methods=['POST'])
-def get_internships():
-    pdf_files = glob.glob(os.path.join(UPLOAD_FOLDER, '*.pdf'))
-    
-    if pdf_files:        
-        parse_result = parse_search()
-        output = internships(parse_result)
-        session['Jobs'] = output
-        return(render_template("index.html", jobs=output))
-    else:
-        return jsonify({'message': 'No PDF files found'}), 400
+def get_internships():  
+    parse_result = parse_search()
+    output = internships(parse_result)
+    session['Jobs'] = output
+    return(render_template("index.html", jobs=output))
 
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
