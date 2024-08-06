@@ -16,3 +16,5 @@ llama-index-core==0.10.61
 llama-parse==0.4.9
 llama-index-readers-file==0.1.32
 python-dotenv
+langchain_together
+langchain_openai 
